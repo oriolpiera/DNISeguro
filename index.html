@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNI Anonymizer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>DNI Anonymizer</h1>
+    <p>Upload your DNI to blur sensitive information before sharing. <strong>Your image is processed locally in your browser and is never uploaded to any server.</strong></p>
+
+    <input type="file" id="imageLoader" accept="image/*" />
+    <canvas id="imageCanvas"></canvas>
+    <button id="downloadButton" style="display:none;">Download Anonymized Image</button>
+
+    <script src="app.js"></script>
+</body>
+</html>
