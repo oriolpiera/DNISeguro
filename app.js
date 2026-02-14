@@ -1,11 +1,13 @@
 const imageLoader = document.getElementById('imageLoader');
 const canvas = document.getElementById('imageCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimization for frequent getImageData calls
 const downloadButton = document.getElementById('downloadButton');
 
 let originalImage = null;
 let isDrawing = false;
-let startX, startY;
+
+// Store a clean version of the image data to use for the blur effect
+let originalImageData = null;
 
 // 1. Load the image onto the canvas
 imageLoader.addEventListener('change', (e) => {
@@ -18,71 +20,82 @@ imageLoader.addEventListener('change', (e) => {
             canvas.height = originalImage.height;
             // Draw the image on the canvas
             ctx.drawImage(originalImage, 0, 0);
+            // Store the raw image data for our blurring function
+            originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             downloadButton.style.display = 'block'; // Show the download button
         };
         originalImage.src = event.target.result;
     };
     // Read the uploaded file as a URL
-    reader.readAsDataURL(e.target.files[0]);
+    if (e.target.files[0]) {
+        reader.readAsDataURL(e.target.files[0]);
+    }
 });
 
-// 2. Handle manual blurring by drawing rectangles
-canvas.addEventListener('mousedown', (e) => {
+// 2. Unify event handling for mouse and touch
+const startDrawing = (e) => {
     if (!originalImage) return;
     isDrawing = true;
-    // Get starting coordinates relative to the canvas
-    startX = e.offsetX;
-    startY = e.offsetY;
-});
+    paint(e); // Allow blurring on a single click or tap
+};
 
-canvas.addEventListener('mousemove', (e) => {
-    if (!isDrawing || !originalImage) return;
-    
-    // Redraw the original image to clear previous temporary rectangles
-    ctx.drawImage(originalImage, 0, 0);
-    
-    const currentX = e.offsetX;
-    const currentY = e.offsetY;
-    const width = currentX - startX;
-    const height = currentY - startY;
-
-    // Draw a semi-transparent rectangle to show the user what they are selecting
-    ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
-    ctx.fillRect(startX, startY, width, height);
-});
-
-canvas.addEventListener('mouseup', (e) => {
-    if (!isDrawing || !originalImage) return;
+const stopDrawing = () => {
     isDrawing = false;
+};
 
-    const endX = e.offsetX;
-    const endY = e.offsetY;
-    const width = endX - startX;
-    const height = endY - startY;
+const paint = (e) => {
+    if (!isDrawing || !originalImage) return;
 
-    // Apply the blur effect to the selected area
-    applyBlur(startX, startY, width, height);
-});
+    // Prevent default behavior like scrolling on touch devices
+    e.preventDefault();
 
-function applyBlur(x, y, width, height) {
-    // A simple "pixelation" blur effect
-    const pixelSize = 15; // Adjust for more or less blur
-    
-    // Get the image data for the selected rectangle
-    const imageData = ctx.getImageData(x, y, width, height);
-    const data = imageData.data;
+    const { x, y } = getCoords(e);
+    applyBlur(x, y);
+};
 
-    for (let j = 0; j < height; j += pixelSize) {
-        for (let i = 0; i < width; i += pixelSize) {
-            // Get the color of the top-left pixel in the block
-            const pixelIndex = (j * width + i) * 4;
-            const r = data[pixelIndex];
-            const g = data[pixelIndex + 1];
-            const b = data[pixelIndex + 2];
+// Helper to get coordinates for both mouse and touch events
+const getCoords = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+        // Touch event
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    }
+    // Mouse event
+    return { x: e.offsetX, y: e.offsetY };
+};
 
-            // Fill the entire block with that color
-            ctx.fillStyle = `rgb(${r}, , )`;
-            ctx.fillRect(x + i, y + j, pixelSize, pixelSize);
+// Add event listeners for both mouse and touch
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('mouseout', stopDrawing); // Stop if mouse leaves canvas
+canvas.addEventListener('mousemove', paint);
+
+canvas.addEventListener('touchstart', startDrawing);
+canvas.addEventListener('touchend', stopDrawing);
+canvas.addEventListener('touchmove', paint);
+
+function applyBlur(x, y) {
+    const brushSize = 30; // The diameter of the blur brush
+    const pixelSize = 10; // The size of the pixelation blocks
+
+    // Center the brush on the cursor/finger
+    const startX = Math.floor(x - brushSize / 2);
+    const startY = Math.floor(y - brushSize / 2);
+
+    for (let j = 0; j < brushSize; j += pixelSize) {
+        for (let i = 0; i < brushSize; i += pixelSize) {
+            // Get the color from the original, un-blurred image data
+            const pixelIndex = ((startY + j) * canvas.width + (startX + i)) * 4;
+            const r = originalImageData.data[pixelIndex];
+            const g = originalImageData.data[pixelIndex + 1];
+            const b = originalImageData.data[pixelIndex + 2];
+
+            // Fill a block on the canvas with the sampled color
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.fillRect(startX + i, startY + j, pixelSize, pixelSize);
         }
     }
 }
