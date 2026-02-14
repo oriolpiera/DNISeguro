@@ -3,6 +3,7 @@ const canvas = document.getElementById('imageCanvas');
 const langSwitcher = document.getElementById('lang-switcher');
 const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimization for frequent getImageData calls
 const undoButton = document.getElementById('undoButton');
+const grayscaleButton = document.getElementById('grayscaleButton');
 const downloadButton = document.getElementById('downloadButton');
 
 let originalImage = null;
@@ -29,6 +30,7 @@ imageLoader.addEventListener('change', (e) => {
             ctx.drawImage(originalImage, 0, 0);
             // Store the raw image data for our blurring function
             originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            grayscaleButton.style.display = 'block';
             downloadButton.style.display = 'block'; // Show the download button
 
             // Reset history for the new image
@@ -170,6 +172,29 @@ function undoLast() {
 }
 
 undoButton.addEventListener('click', undoLast);
+
+function convertToGrayscale() {
+    if (!originalImage) return;
+
+    // Save state before applying the filter, so it can be undone
+    saveState();
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        // Use the luminosity formula for a more accurate grayscale conversion
+        const luminosity = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        data[i] = luminosity;     // Red
+        data[i + 1] = luminosity; // Green
+        data[i + 2] = luminosity; // Blue
+    }
+
+    // Put the modified image data back onto the canvas
+    ctx.putImageData(imageData, 0, 0);
+}
+
+grayscaleButton.addEventListener('click', convertToGrayscale);
 
 // 3. Download the final image
 downloadButton.addEventListener('click', () => {

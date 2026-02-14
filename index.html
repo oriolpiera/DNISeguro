@@ -21,6 +21,7 @@
     <canvas id="imageCanvas"></canvas>
     <div class="controls">
         <button id="undoButton" style="display:none;" data-i18n-key="undoButton">Undo</button>
+        <button id="grayscaleButton" style="display:none;" data-i18n-key="grayscaleButton">Convert to B&W</button>
         <button id="downloadButton" style="display:none;" data-i18n-key="downloadButton">Download Anonymized Image</button>
     </div>
 
@@ -49,7 +50,25 @@
                 </ul>
             </div>
         </details>
+        <details>
+            <summary data-i18n-key="useCaseGeneralExample">General Example of anonimization</summary>
+            <div class="recommendation-content">
+                <p data-i18n-key="generalExampleDNIBlur">This is an example provided for the Policia Nacional to how to blur sensitive data.</p>
+                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhMpgQN7-ygI0Fn07lqHZIml6pqs253hhUyViCtyeoTg8wAC5T6OC5EFH9P-yEnixByWuIheWqN6drCfqPN0DIRKm5mOw1VV2PpQNjkT5C36G4AomYPfgMb9yL_YnOxjLLBNQR2sT7wMDmwWMOIgIMtioJSyh0PpJwUwYXES29U1QtFK2FogcKntpkpSm8/s900/LlF2taqx.jpg" alt="Example of a redacted DNI" class="recommendation-example-image">
+            </div>
+        </details>
+        <details>
+            <summary data-i18n-key="useCaseGeneralTitle">General Information</summary>
+            <div class="recommendation-content">
+                <p data-i18n-key="generalInfoText">For more details on when it is legal to request a copy of your ID, you can consult this illustrative article.</p>
+            </div>
+        </details>
     </section>
+
+    <footer id="about-us">
+        <h3 data-i18n-key="aboutTitle">About DNISeguro & Your Privacy</h3>
+        <p data-i18n-key="aboutText">DNISeguro is a tool designed to protect your privacy. We want to be 100% transparent: your images are never uploaded to any server. All redaction processing happens securely and exclusively within your own browser. What happens on your computer, stays on your computer.</p>
+    </footer>
 
     <script src="app.js?v=1.1"></script>
 </body>

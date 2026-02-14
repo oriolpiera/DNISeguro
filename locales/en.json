@@ -4,6 +4,7 @@
   "description": "Upload your DNI to blur sensitive information before sharing. <strong>Your image is processed locally in your browser and is never uploaded to any server.</strong>",
   "undoButton": "Undo",
   "downloadButton": "Download Anonymized Image",
+  "grayscaleButton": "Black & White",
   "downloadFilename": "anonymized-dni.png",
   "recommendationsTitle": "Usage Recommendations",
   "useCaseHotelTitle": "Hotel Check-in",
@@ -20,5 +21,11 @@
   "dataExpiryDate": "Expiry Date",
   "dataParentsNames": "Parents' Names",
   "dataBirthplace": "Birthplace",
-  "dataMrz": "The MRZ (Machine Readable Zone at the bottom)"
+  "dataMrz": "The MRZ (Machine Readable Zone at the bottom)",
+  "useCaseGeneralTitle": "General Information",
+  "useCaseGeneralExample": "Example of Anonymization",
+  "generalExampleDNIBlur": "This is an example provided by the Policia Nacional on how to blur sensitive data.",
+  "generalInfoText": "For more details on when it is legal to request a copy of your ID, you can consult this <a href=\"https://www.societejuridique.com/pueden-pedirme-una-copia-del-dni-lo-que-dice-la-aepd/\" target=\"_blank\" rel=\"noopener noreferrer\">illustrative article</a>.",
+  "aboutTitle": "About DNISeguro & Your Privacy",
+  "aboutText": "DNISeguro is a tool designed to protect your privacy. We want to be 100% transparent: your images are never uploaded to any server. All redaction processing happens securely and exclusively within your own browser. What happens on your computer, stays on your computer."
 }

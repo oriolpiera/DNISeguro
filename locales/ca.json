@@ -4,6 +4,7 @@
   "description": "Puja el teu DNI per ocultar informació sensible abans de compartir-lo. <strong>La teva imatge es processa localment al teu navegador i mai no es puja a cap servidor.</strong>",
   "undoButton": "Desfer",
   "downloadButton": "Descarregar Imatge Anonimitzada",
+  "grayscaleButton": "Blanc i Negre",
   "downloadFilename": "dni-anonimitzat.png",
   "recommendationsTitle": "Recomanacions d'Ús",
   "useCaseHotelTitle": "Check-in en un Hotel",
@@ -20,5 +21,11 @@
   "dataExpiryDate": "Data de Caducitat",
   "dataParentsNames": "Noms dels Pares",
   "dataBirthplace": "Lloc de Naixement",
-  "dataMrz": "La zona MRZ (zona de lectura mecànica a la part inferior)"
-}   
+  "dataMrz": "La zona MRZ (zona de lectura mecànica a la part inferior)",
+  "useCaseGeneralTitle": "Informació General",
+  "useCaseGeneralExample": "Exemple d'anonimització",
+  "generalExampleDNIBlur": "Aquest és un exemple proporcionat per la Policia Nacional sobre com ocultar dades sensibles.",
+  "generalInfoText": "Per a més detalls sobre quan és legal sol·licitar una còpia del teu DNI, pots consultar aquest <a href=\"https://www.societejuridique.com/pueden-pedirme-una-copia-del-dni-lo-que-dice-la-aepd/\" target=\"_blank\" rel=\"noopener noreferrer\">article il·lustratiu</a>.",
+  "aboutTitle": "Sobre DNISeguro i la Teva Privacitat",
+  "aboutText": "DNISeguro és una eina dissenyada per protegir la teva privacitat. Volem ser 100% transparents: les teves imatges mai no es pugen a cap servidor. Tot el procés d'ocultació es fa de forma segura i exclusiva dins del teu propi navegador. El que passa al teu ordinador, es queda al teu ordinador."
+}

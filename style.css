@@ -58,6 +58,14 @@ button#undoButton:hover {
     background-color: #5a6268;
 }
 
+button#grayscaleButton {
+    background-color: #343a40;
+}
+
+button#grayscaleButton:hover {
+    background-color: #23272b;
+}
+
 #lang-switcher {
     position: absolute;
     right: 0;
@@ -118,4 +126,24 @@ canvas {
 
 .recommendation-content ul {
     padding-left: 20px;
+}
+
+#about-us {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+}
+
+#about-us h3 {
+    margin-bottom: 10px;
+}
+
+.recommendation-example-image {
+    max-width: 100%;
+    border-radius: 5px;
+    margin-top: 15px;
+    border: 1px solid #eee;
 }

@@ -4,6 +4,7 @@
   "description": "Sube tu DNI para ocultar información sensible antes de compartirlo. <strong>Tu imagen se procesa localmente en tu navegador y nunca se sube a ningún servidor.</strong>",
   "undoButton": "Deshacer",
   "downloadButton": "Descargar Imagen Anonimizada",
+  "grayscaleButton": "Blanco y Negro",
   "downloadFilename": "dni-anonimizado.png",
   "recommendationsTitle": "Recomendaciones de Uso",
   "useCaseHotelTitle": "Check-in en un Hotel",
@@ -20,5 +21,11 @@
   "dataExpiryDate": "Fecha de Caducidad",
   "dataParentsNames": "Nombres de los Padres",
   "dataBirthplace": "Lugar de Nacimiento",
-  "dataMrz": "La zona MRZ (zona de lectura mecánica en la parte inferior)"
+  "dataMrz": "La zona MRZ (zona de lectura mecánica en la parte inferior)",
+  "useCaseGeneralTitle": "Información General",
+  "useCaseGeneralExample": "Ejemplo de anonimización",
+  "generalExampleDNIBlur": "Este es un ejemplo proporcionado por la Policía Nacional sobre cómo ocultar datos sensibles.",
+  "generalInfoText": "Para más detalles sobre cuándo es legal solicitar una copia de tu DNI, puedes consultar este <a href=\"https://www.societejuridique.com/pueden-pedirme-una-copia-del-dni-lo-que-dice-la-aepd/\" target=\"_blank\" rel=\"noopener noreferrer\">artículo ilustrativo</a>.",
+  "aboutTitle": "Sobre DNISeguro y Tu Privacidad",
+  "aboutText": "DNISeguro es una herramienta diseñada para proteger tu privacidad. Queremos ser 100% transparentes: tus imágenes nunca se suben a ningún servidor. Todo el proceso de ocultación se realiza de forma segura y exclusiva dentro de tu propio navegador. Lo que pasa en tu ordenador, se queda en tu ordenador."
 }
