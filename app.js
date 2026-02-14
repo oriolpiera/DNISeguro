@@ -1,13 +1,20 @@
 const imageLoader = document.getElementById('imageLoader');
 const canvas = document.getElementById('imageCanvas');
+const langSwitcher = document.getElementById('lang-switcher');
 const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimization for frequent getImageData calls
+const undoButton = document.getElementById('undoButton');
 const downloadButton = document.getElementById('downloadButton');
 
 let originalImage = null;
 let isDrawing = false;
+let lastPoint = null;
 
 // Store a clean version of the image data to use for the blur effect
 let originalImageData = null;
+// Store canvas states for the undo functionality
+let history = [];
+// Store current language translations
+let translations = {};
 
 // 1. Load the image onto the canvas
 imageLoader.addEventListener('change', (e) => {
@@ -23,6 +30,10 @@ imageLoader.addEventListener('change', (e) => {
             // Store the raw image data for our blurring function
             originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             downloadButton.style.display = 'block'; // Show the download button
+
+            // Reset history for the new image
+            history = [];
+            undoButton.style.display = 'none';
         };
         originalImage.src = event.target.result;
     };
@@ -35,12 +46,26 @@ imageLoader.addEventListener('change', (e) => {
 // 2. Unify event handling for mouse and touch
 const startDrawing = (e) => {
     if (!originalImage) return;
+
     isDrawing = true;
-    paint(e); // Allow blurring on a single click or tap
+    // Get the starting point, but don't draw a line yet
+    lastPoint = getCoords(e);
+
+    // Apply a single dab for a click/tap without movement
+    applyRedaction(lastPoint.x, lastPoint.y);
 };
 
 const stopDrawing = () => {
+    if (!isDrawing) return; // Don't save state if we weren't drawing
     isDrawing = false;
+    lastPoint = null; // Reset the last point
+
+    // Save the state *after* the drawing stroke is complete
+    saveState();
+
+    // Ensure the drawing buffer is flushed to the canvas if needed by the browser
+    // (though not strictly necessary with our current implementation)
+    ctx.beginPath();
 };
 
 const paint = (e) => {
@@ -49,22 +74,47 @@ const paint = (e) => {
     // Prevent default behavior like scrolling on touch devices
     e.preventDefault();
 
-    const { x, y } = getCoords(e);
-    applyBlur(x, y);
+    if (!lastPoint) return;
+
+    const currentPoint = getCoords(e);
+
+    // Calculate the distance and angle between the last point and the current point
+    const dist = Math.hypot(currentPoint.x - lastPoint.x, currentPoint.y - lastPoint.y);
+    const angle = Math.atan2(currentPoint.y - lastPoint.y, currentPoint.x - lastPoint.x);
+
+    const brushSize = 25; // Must match the brush size in applyRedaction
+
+    // Draw a line of redaction marks to fill the gap
+    for (let i = 0; i < dist; i += brushSize / 4) { // Step by a fraction of the brush size
+        const x = lastPoint.x + (Math.cos(angle) * i);
+        const y = lastPoint.y + (Math.sin(angle) * i);
+        applyRedaction(x, y);
+    }
+
+    // Update the last point for the next move event
+    lastPoint = currentPoint;
 };
 
 // Helper to get coordinates for both mouse and touch events
 const getCoords = (e) => {
     const rect = canvas.getBoundingClientRect();
+    let x, y;
+
     if (e.touches) {
         // Touch event
-        return {
-            x: e.touches[0].clientX - rect.left,
-            y: e.touches[0].clientY - rect.top
-        };
+        x = e.touches[0].clientX - rect.left;
+        y = e.touches[0].clientY - rect.top;
+    } else {
+        // Mouse event
+        x = e.offsetX;
+        y = e.offsetY;
     }
-    // Mouse event
-    return { x: e.offsetX, y: e.offsetY };
+
+    // Scale coordinates to match canvas resolution
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return { x: x * scaleX, y: y * scaleY };
 };
 
 // Add event listeners for both mouse and touch
@@ -77,33 +127,96 @@ canvas.addEventListener('touchstart', startDrawing);
 canvas.addEventListener('touchend', stopDrawing);
 canvas.addEventListener('touchmove', paint);
 
-function applyBlur(x, y) {
-    const brushSize = 30; // The diameter of the blur brush
-    const pixelSize = 10; // The size of the pixelation blocks
+function applyRedaction(x, y) {
+    const brushSize = 25; // The diameter of the redaction brush
 
     // Center the brush on the cursor/finger
     const startX = Math.floor(x - brushSize / 2);
     const startY = Math.floor(y - brushSize / 2);
 
-    for (let j = 0; j < brushSize; j += pixelSize) {
-        for (let i = 0; i < brushSize; i += pixelSize) {
-            // Get the color from the original, un-blurred image data
-            const pixelIndex = ((startY + j) * canvas.width + (startX + i)) * 4;
-            const r = originalImageData.data[pixelIndex];
-            const g = originalImageData.data[pixelIndex + 1];
-            const b = originalImageData.data[pixelIndex + 2];
+    // --- New "Elegant" Redaction Effect ---
 
-            // Fill a block on the canvas with the sampled color
-            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-            ctx.fillRect(startX + i, startY + j, pixelSize, pixelSize);
-        }
+    // 1. Set up a subtle inner shadow for depth
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 5;
+
+    // 2. Set the fill style to a dark gray
+    ctx.fillStyle = '#333333';
+
+    // 3. Draw the redaction rectangle
+    ctx.fillRect(startX, startY, brushSize, brushSize);
+
+    // 4. Reset shadow properties to avoid affecting other drawings
+    ctx.shadowBlur = 0;
+}
+
+function saveState() {
+    // Save the current canvas content to our history stack
+    history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    undoButton.style.display = 'inline-block'; // Show the undo button
+}
+
+function undoLast() {
+    if (history.length > 0) {
+        // Remove the last state from history and restore it to the canvas
+        const lastState = history.pop();
+        ctx.putImageData(lastState, 0, 0);
+    }
+
+    // If history is now empty, hide the undo button
+    if (history.length === 0) {
+        undoButton.style.display = 'none';
     }
 }
 
+undoButton.addEventListener('click', undoLast);
+
 // 3. Download the final image
 downloadButton.addEventListener('click', () => {
+    const downloadFilename = translations.downloadFilename || 'anonymized-dni.png';
     const link = document.createElement('a');
-    link.download = 'anonymized-dni.png';
+    link.download = downloadFilename;
     link.href = canvas.toDataURL('image/png');
     link.click();
 });
+
+// 4. I18n (Internationalization) Logic
+
+const i18n = {
+    async setLanguage(lang) {
+        // Fetch the translation file
+        const cacheBust = `?v=${new Date().getTime()}`;
+        const response = await fetch(`locales/${lang}.json${cacheBust}`);
+        translations = await response.json();
+
+        // Update all elements with a data-i18n-key
+        document.querySelectorAll('[data-i18n-key]').forEach(el => {
+            const key = el.getAttribute('data-i18n-key');
+            if (translations[key]) {
+                // Use innerHTML to support the <strong> tag in the description
+                el.innerHTML = translations[key];
+            }
+        });
+
+        // Save language preference
+        localStorage.setItem('language', lang);
+    },
+
+    initialize() {
+        // Get saved language or detect browser language, default to 'en'
+        const initialLang = localStorage.getItem('language') || navigator.language.split('-')[0] || 'en';
+        // Support 'es' and 'en', otherwise default to 'en'
+        const langToSet = ['en', 'es', 'ca'].includes(initialLang) ? initialLang : 'en';
+        this.setLanguage(langToSet);
+    }
+};
+
+langSwitcher.addEventListener('click', (e) => {
+    const lang = e.target.dataset.lang;
+    if (lang) {
+        i18n.setLanguage(lang);
+    }
+});
+
+// Initialize translations when the script loads
+i18n.initialize();

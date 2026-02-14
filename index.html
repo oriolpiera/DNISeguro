@@ -3,17 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DNI Anonymizer</title>
+    <title data-i18n-key="title">DNI Anonymizer</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>DNI Anonymizer</h1>
-    <p>Upload your DNI to blur sensitive information before sharing. <strong>Your image is processed locally in your browser and is never uploaded to any server.</strong></p>
+    <div class="header-container">
+        <h1 data-i18n-key="header">DNI Anonymizer</h1>
+        <div id="lang-switcher">
+            <button data-lang="en">EN</button>
+            <button data-lang="es">ES</button>
+            <button data-lang="ca">CA</button>
+        </div>
+    </div>
+    <p data-i18n-key="description">Upload your DNI to blur sensitive information before sharing. <strong>Your image is processed locally in your browser and is never uploaded to any server.</strong></p>
 
     <input type="file" id="imageLoader" accept="image/*" />
     <canvas id="imageCanvas"></canvas>
-    <button id="downloadButton" style="display:none;">Download Anonymized Image</button>
+    <div class="controls">
+        <button id="undoButton" style="display:none;" data-i18n-key="undoButton">Undo</button>
+        <button id="downloadButton" style="display:none;" data-i18n-key="downloadButton">Download Anonymized Image</button>
+    </div>
 
-    <script src="app.js"></script>
+    <section id="recommendations">
+        <h2 data-i18n-key="recommendationsTitle">Usage Recommendations</h2>
+        <details>
+            <summary data-i18n-key="useCaseHotelTitle">Hotel Check-in</summary>
+            <div class="recommendation-content">
+                <p data-i18n-key="hotelIntro">According to the Spanish Data Protection Agency (AEPD), hotels only need to collect specific data for the traveler's entry form. They are not permitted to make a full copy of your ID.</p>
+                <p data-i18n-key="recommendationKeep">Data required by law:</p>
+                <ul>
+                    <li data-i18n-key="dataFullName">Full Name</li>
+                    <li data-i18n-key="dataDniNumber">DNI Number</li>
+                    <li data-i18n-key="dataIssueDate">Date of Issue</li>
+                    <li data-i18n-key="dataNationality">Nationality</li>
+                    <li data-i18n-key="dataBirthDate">Date of Birth</li>
+                    <li data-i18n-key="dataSex">Sex</li>
+                </ul>
+                <p data-i18n-key="recommendationRedact">We recommend redacting all other data, especially:</p>
+                <ul>
+                    <li data-i18n-key="dataPhoto">Your Photo</li>
+                    <li data-i18n-key="dataExpiryDate">Expiry Date</li>
+                    <li data-i18n-key="dataParentsNames">Parents' Names</li>
+                    <li data-i18n-key="dataBirthplace">Birthplace</li>
+                    <li data-i18n-key="dataMrz">The MRZ (Machine Readable Zone at the bottom)</li>
+                </ul>
+            </div>
+        </details>
+    </section>
+
+    <script src="app.js?v=1.1"></script>
 </body>
 </html>
