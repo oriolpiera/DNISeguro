@@ -15,8 +15,10 @@
             <button data-lang="ca">CA</button>
         </div>
     </div>
-    <p data-i18n-key="description">Upload your DNI to blur sensitive information before sharing. <strong>Your image is processed locally in your browser and is never uploaded to any server.</strong></p>
-
+    <div>
+        <img src="assets/dni_example.jpg" alt="Example of a redacted DNI" class="recommendation-example-image">
+        <p data-i18n-key="description">Upload your DNI to blur sensitive information before sharing. <strong>Your image is processed locally in your browser and is never uploaded to any server.</strong></p>
+    </div>
     <input type="file" id="imageLoader" accept="image/*" />
     <canvas id="imageCanvas"></canvas>
     <div id="text-controls" class="tool-controls" style="display:none;">
@@ -59,12 +61,7 @@
             <summary data-i18n-key="useCaseGeneralExample">General Example of anonimization</summary>
             <div class="recommendation-content">
                 <p data-i18n-key="generalExampleDNIBlur">This is an example provided for the Policia Nacional to how to blur sensitive data.</p>
-                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhMpgQN7-ygI0Fn07lqHZIml6pqs253hhUyViCtyeoTg8wAC5T6OC5EFH9P-yEnixByWuIheWqN6drCfqPN0DIRKm5mOw1VV2PpQNjkT5C36G4AomYPfgMb9yL_YnOxjLLBNQR2sT7wMDmwWMOIgIMtioJSyh0PpJwUwYXES29U1QtFK2FogcKntpkpSm8/s900/LlF2taqx.jpg" alt="Example of a redacted DNI" class="recommendation-example-image">
-            </div>
-        </details>
-        <details>
-            <summary data-i18n-key="useCaseGeneralTitle">General Information</summary>
-            <div class="recommendation-content">
+                <img src="assets/dni_sensitive_data.webp" alt="Example of a redacted DNI" class="recommendation-example-image">
                 <p data-i18n-key="generalInfoText">For more details on when it is legal to request a copy of your ID, you can consult this illustrative article.</p>
             </div>
         </details>
