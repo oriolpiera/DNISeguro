@@ -50,6 +50,15 @@ button:hover {
     gap: 10px;
 }
 
+.tool-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #e9ecef;
+    padding: 5px 15px;
+    border-radius: 5px;
+}
+
 button#undoButton {
     background-color: #6c757d;
 }
@@ -64,6 +73,14 @@ button#grayscaleButton {
 
 button#grayscaleButton:hover {
     background-color: #23272b;
+}
+
+button#addTextButton {
+    background-color: #17a2b8;
+}
+
+button#addTextButton:hover {
+    background-color: #138496;
 }
 
 #lang-switcher {

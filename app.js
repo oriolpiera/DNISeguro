@@ -3,12 +3,17 @@ const canvas = document.getElementById('imageCanvas');
 const langSwitcher = document.getElementById('lang-switcher');
 const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimization for frequent getImageData calls
 const undoButton = document.getElementById('undoButton');
+const addTextButton = document.getElementById('addTextButton');
+const textControls = document.getElementById('text-controls');
 const grayscaleButton = document.getElementById('grayscaleButton');
 const downloadButton = document.getElementById('downloadButton');
 
 let originalImage = null;
 let isDrawing = false;
 let lastPoint = null;
+let selectedObject = null;
+let isDragging = false;
+let dragOffsetX, dragOffsetY;
 
 // Store a clean version of the image data to use for the blur effect
 let originalImageData = null;
@@ -16,6 +21,21 @@ let originalImageData = null;
 let history = [];
 // Store current language translations
 let translations = {};
+
+/**
+ * Renders the entire canvas.
+ * It draws the original image and then iterates through the history
+ * to draw every redaction and text object.
+ */
+function render() {
+    if (!originalImage) return;
+    ctx.drawImage(originalImage, 0, 0);
+    history.forEach(obj => {
+        drawObject(obj);
+        // If the object is selected, draw a selection box around it
+        if (obj === selectedObject) drawSelectionBox(obj);
+    });
+}
 
 // 1. Load the image onto the canvas
 imageLoader.addEventListener('change', (e) => {
@@ -28,8 +48,8 @@ imageLoader.addEventListener('change', (e) => {
             canvas.height = originalImage.height;
             // Draw the image on the canvas
             ctx.drawImage(originalImage, 0, 0);
-            // Store the raw image data for our blurring function
-            originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            addTextButton.style.display = 'block';
             grayscaleButton.style.display = 'block';
             downloadButton.style.display = 'block'; // Show the download button
 
@@ -45,38 +65,86 @@ imageLoader.addEventListener('change', (e) => {
     }
 });
 
-// 2. Unify event handling for mouse and touch
-const startDrawing = (e) => {
+function handleCanvasMouseDown(e) {
     if (!originalImage) return;
+    e.preventDefault();
 
-    isDrawing = true;
-    // Get the starting point, but don't draw a line yet
-    lastPoint = getCoords(e);
+    const { x, y } = getCoords(e);
 
-    // Apply a single dab for a click/tap without movement
-    applyRedaction(lastPoint.x, lastPoint.y);
-};
+    // Check if we are clicking on an existing text object
+    const clickedObject = findClickedTextObject(x, y);
 
-const stopDrawing = () => {
-    if (!isDrawing) return; // Don't save state if we weren't drawing
+    if (clickedObject) {
+        // We clicked an object, enter dragging mode
+        selectedObject = clickedObject;
+        isDragging = true;
+        isDrawing = false; // Ensure we are not in drawing mode
+        dragOffsetX = x - selectedObject.x;
+        dragOffsetY = y - selectedObject.y;
+        textControls.style.display = 'flex';
+        document.getElementById('fontSize').value = selectedObject.size;
+        render();
+    } else {
+        // We clicked on the background, start a new redaction stroke
+        deselectAll();
+        isDrawing = true;
+        isDragging = false;
+        lastPoint = { x, y };
+
+        const redactionStroke = {
+            type: 'redaction',
+            points: [{ x, y }]
+        };
+        history.push(redactionStroke);
+        render();
+    }
+}
+
+function deselectAll() {
+    selectedObject = null;
+    textControls.style.display = 'none';
+    render();
+}
+
+const handleCanvasMouseUp = () => {
+    if (isDrawing) {
+        // Finished a redaction stroke
+        undoButton.style.display = 'inline-block';
+    }
+    if (isDragging) {
+        // Finished dragging an object
+        // The object position is already updated, just re-render to be safe
+        render();
+    }
     isDrawing = false;
+    isDragging = false;
     lastPoint = null; // Reset the last point
 
-    // Save the state *after* the drawing stroke is complete
-    saveState();
-
-    // Ensure the drawing buffer is flushed to the canvas if needed by the browser
-    // (though not strictly necessary with our current implementation)
+    // The redaction object was already added on startDrawing and paint
     ctx.beginPath();
 };
 
 const paint = (e) => {
-    if (!isDrawing || !originalImage) return;
+    if (!originalImage) return;
+
+    if (isDragging && selectedObject) {
+        e.preventDefault();
+        const { x, y } = getCoords(e);
+        selectedObject.x = x - dragOffsetX;
+        selectedObject.y = y - dragOffsetY;
+        render();
+        return;
+    }
+
+    if (!isDrawing) return;
 
     // Prevent default behavior like scrolling on touch devices
     e.preventDefault();
 
     if (!lastPoint) return;
+
+    // Get the current redaction stroke object
+    const currentStroke = history[history.length - 1];
 
     const currentPoint = getCoords(e);
 
@@ -90,8 +158,9 @@ const paint = (e) => {
     for (let i = 0; i < dist; i += brushSize / 4) { // Step by a fraction of the brush size
         const x = lastPoint.x + (Math.cos(angle) * i);
         const y = lastPoint.y + (Math.sin(angle) * i);
-        applyRedaction(x, y);
+        currentStroke.points.push({ x, y });
     }
+    render();
 
     // Update the last point for the next move event
     lastPoint = currentPoint;
@@ -120,14 +189,39 @@ const getCoords = (e) => {
 };
 
 // Add event listeners for both mouse and touch
-canvas.addEventListener('mousedown', startDrawing);
-canvas.addEventListener('mouseup', stopDrawing);
-canvas.addEventListener('mouseout', stopDrawing); // Stop if mouse leaves canvas
+canvas.addEventListener('mousedown', handleCanvasMouseDown);
+canvas.addEventListener('mouseup', handleCanvasMouseUp);
+canvas.addEventListener('mouseout', handleCanvasMouseUp); // Stop if mouse leaves canvas
 canvas.addEventListener('mousemove', paint);
 
-canvas.addEventListener('touchstart', startDrawing);
-canvas.addEventListener('touchend', stopDrawing);
+canvas.addEventListener('touchstart', handleCanvasMouseDown);
+canvas.addEventListener('touchend', handleCanvasMouseUp);
 canvas.addEventListener('touchmove', paint);
+
+function drawObject(obj) {
+    if (obj.type === 'redaction') {
+        obj.points.forEach(point => applyRedaction(point.x, point.y));
+    } else if (obj.type === 'text') {
+        drawText(obj);
+    } else if (obj.type === 'filter' && obj.filter === 'grayscale') {
+        applyGrayscaleFilter();
+    }
+}
+
+function drawSelectionBox(obj) {
+    if (obj.type !== 'text') return;
+
+    ctx.font = `bold ${obj.size}px sans-serif`; // Ensure context is set for measurement
+    const textMetrics = ctx.measureText(obj.content);
+    const textWidth = textMetrics.width;
+    const textHeight = obj.size; // Approximate height
+
+    ctx.strokeStyle = 'rgba(0, 123, 255, 0.8)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]); // Dashed line
+    ctx.strokeRect(obj.x - 5, obj.y - textHeight, textWidth + 10, textHeight + 10);
+    ctx.setLineDash([]); // Reset to solid line
+}
 
 function applyRedaction(x, y) {
     const brushSize = 25; // The diameter of the redaction brush
@@ -152,21 +246,15 @@ function applyRedaction(x, y) {
     ctx.shadowBlur = 0;
 }
 
-function saveState() {
-    // Save the current canvas content to our history stack
-    history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-    undoButton.style.display = 'inline-block'; // Show the undo button
-}
-
 function undoLast() {
     if (history.length > 0) {
-        // Remove the last state from history and restore it to the canvas
-        const lastState = history.pop();
-        ctx.putImageData(lastState, 0, 0);
+        history.pop(); // Remove the last object
+        render(); // Re-render the canvas
     }
 
     // If history is now empty, hide the undo button
     if (history.length === 0) {
+        // Also re-render to ensure the base image is shown if all filters are gone
         undoButton.style.display = 'none';
     }
 }
@@ -176,8 +264,14 @@ undoButton.addEventListener('click', undoLast);
 function convertToGrayscale() {
     if (!originalImage) return;
 
-    // Save state before applying the filter, so it can be undone
-    saveState();
+    // Add a filter object to the history
+    history.push({ type: 'filter', filter: 'grayscale' });
+    render();
+    undoButton.style.display = 'inline-block';
+}
+
+function applyGrayscaleFilter() {
+    if (!originalImage) return;
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
@@ -195,6 +289,110 @@ function convertToGrayscale() {
 }
 
 grayscaleButton.addEventListener('click', convertToGrayscale);
+
+const addText = () => {
+    if (!originalImage) return;
+
+    const text = prompt(translations.addTextPrompt || "Enter the text to add:");
+    if (!text) return; // User cancelled or entered no text
+
+    // Show text controls and enter text mode
+    textControls.style.display = 'flex';
+    canvas.style.cursor = 'text';
+
+    const textObject = {
+        type: 'text',
+        content: text,
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        size: document.getElementById('fontSize').value
+    };
+
+    const previewText = (e) => {
+        e.preventDefault();
+
+        const { x, y } = getCoords(e);
+        textObject.x = x;
+        textObject.y = y;
+        textObject.size = document.getElementById('fontSize').value;
+
+        drawText(textObject);
+
+        render(); // Re-render the canvas to clear the last preview
+        drawText(textObject); // Draw the new preview on top
+    };
+
+    const placeText = (e) => {
+        e.preventDefault();
+
+        // Clean up event listeners
+        cleanupTextEventListeners();
+
+        // Hide controls and reset cursor
+        textControls.style.display = 'none';
+        canvas.style.cursor = 'crosshair';
+
+        // Add the final text object to history and re-render
+        history.push(textObject);
+        render();
+        deselectAll();
+        undoButton.style.display = 'inline-block';
+    };
+
+    const cleanupTextEventListeners = () => {
+        canvas.removeEventListener('mousemove', previewText);
+        canvas.removeEventListener('touchmove', previewText);
+        canvas.removeEventListener('click', placeText);
+    };
+
+    // Add listeners for previewing and placing
+    canvas.addEventListener('mousemove', previewText);
+    canvas.addEventListener('touchmove', previewText);
+    canvas.addEventListener('click', placeText, { once: true });
+};
+
+function drawText(textObj) {
+    ctx.font = `bold ${textObj.size}px sans-serif`;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.lineWidth = textObj.size / 10;
+    ctx.strokeText(textObj.content, textObj.x, textObj.y);
+    ctx.fillText(textObj.content, textObj.x, textObj.y);
+}
+
+addTextButton.addEventListener('click', addText);
+
+function findClickedTextObject(x, y) {
+    // Find if a text object was clicked (in reverse order to get the top one)
+    return [...history].reverse().find(obj => {
+        if (obj.type !== 'text') return false;
+
+        // Simple bounding box collision detection
+        ctx.font = `bold ${obj.size}px sans-serif`; // Must set font to measure correctly
+        const textWidth = ctx.measureText(obj.content).width;
+        return x >= obj.x && x <= obj.x + textWidth && y >= obj.y - obj.size && y <= obj.y;
+    });
+}
+
+canvas.addEventListener('dblclick', (e) => {
+    const { x, y } = getCoords(e);
+    const clickedTextObject = findClickedTextObject(x, y);
+
+    if (clickedTextObject) {
+        const newText = prompt(translations.editTextPrompt || "Edit the text:", clickedTextObject.content);
+        if (newText) {
+            clickedTextObject.content = newText;
+            render();
+        }
+    }
+});
+
+document.getElementById('fontSize').addEventListener('input', (e) => {
+    if (selectedObject && selectedObject.type === 'text') {
+        selectedObject.size = e.target.value;
+        render();
+    }
+});
 
 // 3. Download the final image
 downloadButton.addEventListener('click', () => {

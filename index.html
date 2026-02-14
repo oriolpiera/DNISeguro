@@ -19,8 +19,13 @@
 
     <input type="file" id="imageLoader" accept="image/*" />
     <canvas id="imageCanvas"></canvas>
+    <div id="text-controls" class="tool-controls" style="display:none;">
+        <label for="fontSize" data-i18n-key="textSizeLabel">Text Size:</label>
+        <input type="range" id="fontSize" min="10" max="200" value="50">
+    </div>
     <div class="controls">
         <button id="undoButton" style="display:none;" data-i18n-key="undoButton">Undo</button>
+        <button id="addTextButton" style="display:none;" data-i18n-key="addTextButton">Add Text</button>
         <button id="grayscaleButton" style="display:none;" data-i18n-key="grayscaleButton">Convert to B&W</button>
         <button id="downloadButton" style="display:none;" data-i18n-key="downloadButton">Download Anonymized Image</button>
     </div>
